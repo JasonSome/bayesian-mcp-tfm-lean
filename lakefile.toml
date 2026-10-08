@@ -1,0 +1,23 @@
+name = "fc_appendix"
+version = "0.1.0"
+defaultTargets = ["FCAppendix", "Verify"]
+
+[leanOptions]
+autoImplicit = false
+warningAsError = true
+
+[[require]]
+name = "mathlib"
+git = "https://github.com/leanprover-community/mathlib4.git"
+rev = "v4.32.0"
+
+[[require]]
+name = "ProbabilityApproximation"
+git = "https://github.com/Polarnova/ProbabilityApproximation"
+rev = "c89fba908a33ba741836407f43c67609e2d05279"
+
+[[lean_lib]]
+name = "FCAppendix"
+
+[[lean_lib]]
+name = "Verify"

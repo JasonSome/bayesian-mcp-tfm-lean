@@ -1,0 +1,79 @@
+import FCAppendix.PayOnce.EmpiricalDemand
+
+namespace FCAppendix.Bayes
+open MeasureTheory ProbabilityTheory Filter Topology Set Game CommonList
+open PayOnce PayOnce.KernelLawConvergence
+open scoped BigOperators ProbabilityTheory
+
+theorem actual_bid_tail_le_bounded_group {m n c : ℕ} {Seed : Type*} [MeasurableSpace Seed]
+    (Γ : FiniteGame m n c Seed) (hn : 0 < n)
+    (hroute : ∀ᵐ x ∂(Γ.F ⊗ₘ Γ.σ), x.2.routeCount = n)
+    {ε R : ℝ} :
+    (CompactifiedBidLaws.bidLaw Γ : Measure ENNReal) (Ioi (ENNReal.ofReal ε)) ≤
+      (Γ.F ⊗ₘ Γ.σ) {x : ℝ × JointAction n | ε ≤ x.2.bid ∧ x.1-Γ.g ≤ R} + Γ.F (Ioi R) := by
+  have hb : Measurable (fun x : ℝ × JointAction n => x.2.bid) := (measurable_bid n).comp measurable_snd
+  have he : Measurable (fun x : ℝ × JointAction n => ENNReal.ofReal x.2.bid) := ENNReal.measurable_ofReal.comp hb
+  rw [compactifiedBidLaw_eq_map_realBidLaw Γ hn hroute, realBidLaw_eq_action_map,
+    Measure.map_map ENNReal.measurable_ofReal hb]
+  change (Measure.map (fun x : ℝ × JointAction n => ENNReal.ofReal x.2.bid) (Γ.F ⊗ₘ Γ.σ)) _ ≤ _
+  rw [Measure.map_apply he measurableSet_Ioi]
+  have hsub : (fun x : ℝ × JointAction n => ENNReal.ofReal x.2.bid) ⁻¹' Ioi (ENNReal.ofReal ε) ⊆
+      {x : ℝ × JointAction n | ε ≤ x.2.bid ∧ x.1-Γ.g ≤ R} ∪ {x | R < x.1} := by
+    intro x hx
+    have hb : ε < x.2.bid := by
+      by_contra h
+      exact (not_lt_of_ge (ENNReal.ofReal_le_ofReal (le_of_not_gt h))) hx
+    by_cases hv : x.1-Γ.g ≤ R
+    · exact Or.inl ⟨hb.le,hv⟩
+    · exact Or.inr (show R < x.1 by linarith [Γ.g_nonneg])
+  have htail : (Γ.F ⊗ₘ Γ.σ) {x : ℝ × JointAction n | R < x.1} = Γ.F (Ioi R) := by
+    have hp : MeasurePreserving (Prod.fst : ℝ × JointAction n → ℝ) (Γ.F ⊗ₘ Γ.σ) Γ.F :=
+      ⟨measurable_fst, Measure.fst_compProd Γ.F Γ.σ⟩
+    exact hp.measure_preimage measurableSet_Ioi.nullMeasurableSet
+  exact ((measure_mono hsub).trans (measure_union_le _ _)).trans_eq (by rw [htail])
+
+theorem actual_limit_saturated_tail_zero
+    {M C : ℕ → ℕ} {k : ℕ} {Seed : Type*} [MeasurableSpace Seed]
+    (Γ : ∀ t, FiniteGame (M t) (k+1) (C t) Seed)
+    (hk : 1 ≤ k) (hm : ∀ t, 0 < M t) (hcm : ∀ t, C t ≤ M t)
+    (hM : Tendsto M atTop atTop)
+    (hA : ∀ t, (Γ t).A = Schedule.once (k+1)) (hG : ∀ t, (Γ t).G = Schedule.once (k+1))
+    (hu : ∀ t, UsersOptimal (Γ t)) (B : ∀ t, PosteriorSystem (Γ t))
+    (hB : ∀ t, PosteriorProposerOptimalAE (Γ t) (B t))
+    (hsym : ∀ t, SymmetricProposersOnPath (Γ t)) (hatom : ∀ t, PositiveVisibleAtomless (Γ t))
+    (hroute : ∀ t, ∀ᵐ x ∂((Γ t).F ⊗ₘ (Γ t).σ), x.2.routeCount = k+1)
+    (hbid : ∀ t, ∀ᵐ x ∂((Γ t).F ⊗ₘ (Γ t).σ), 0 < x.2.bid)
+    (F : Measure ℝ) [IsProbabilityMeasure F] (hF : ∀ t, (Γ t).F = F)
+    {G : ProbabilityMeasure ENNReal}
+    (hweak : Tendsto (fun t => CompactifiedBidLaws.bidLaw (Γ t)) atTop (𝓝 G))
+    {ρ : ℝ} (hρ : Tendsto (fun t => (C t : ℝ)/(M t)) atTop (𝓝 ρ))
+    {L : ℝ} (hL : 0 < L) (hD : KernelDemand.demand (k+1) (G : Measure ENNReal) L ≤ ρ) :
+    (G : Measure ENNReal) (Ioi (ENNReal.ofReal (((k+1:ℕ):ℝ)*L))) = 0 := by
+  let ε := ((k+1:ℕ):ℝ)*L
+  have hε : 0 < ε := mul_pos (Nat.cast_pos.mpr (by omega)) hL
+  have hbound (R : ℝ) (hR : 0 ≤ R) :
+      (G : Measure ENNReal) (Ioi (ENNReal.ofReal ε)) ≤ F (Ioi R) := by
+    have hzero := tendsto_actual_saturated_group_mass_zero Γ hk hm hcm hM hA hG hu B hB hsym hatom hroute hbid
+      hweak hρ hL hε hR le_rfl hD
+    let E := fun t => {x : ℝ × JointAction (k+1) | ε ≤ x.2.bid ∧ x.1-(Γ t).g ≤ R}
+    have hz : Tendsto (fun t => ((Γ t).F ⊗ₘ (Γ t).σ) (E t)) atTop (𝓝 (0:ENNReal)) := by
+      have hh := ENNReal.continuous_ofReal.tendsto (0:ℝ) |>.comp hzero
+      simpa only [ENNReal.ofReal_zero, measureReal_def, Function.comp_def,
+        ENNReal.ofReal_toReal (measure_ne_top _ _), E] using hh
+    have hle (t : ℕ) := actual_bid_tail_le_bounded_group (Γ t) (by omega) (hroute t) (R := R) (ε := ε)
+    simp only [hF] at hle
+    have hl := Filter.liminf_le_liminf (f := atTop) (Eventually.of_forall hle)
+    have hp := ProbabilityMeasure.le_liminf_measure_open_of_tendsto hweak
+      (isOpen_Ioi (a := ENNReal.ofReal ε))
+    have hlim : liminf (fun t => ((Γ t).F ⊗ₘ (Γ t).σ) (E t)+F (Ioi R)) atTop = F (Ioi R) := by
+      have hh := hz.add_const (F (Ioi R))
+      simpa only [zero_add] using hh.liminf_eq
+    simp only [hF, E] at hlim
+    exact hp.trans (hl.trans_eq hlim)
+  have hreal : (G : Measure ENNReal).real (Ioi (ENNReal.ofReal ε)) ≤ 0 :=
+    le_of_tendsto_of_tendsto tendsto_const_nhds (TailQuantile.tail_tendsto_zero F)
+      ((eventually_ge_atTop (0:ℝ)).mono fun R hR => ENNReal.toReal_mono (measure_ne_top F _) (hbound R hR))
+  by_contra hne
+  exact (ENNReal.toReal_pos hne (measure_ne_top _ _)).not_ge hreal
+
+end FCAppendix.Bayes
