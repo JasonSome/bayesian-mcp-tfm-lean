@@ -3,8 +3,9 @@ import FCAppendix.Affine.PointwiseComparison
 import FCAppendix.Affine.StrictBaseline
 import FCAppendix.Ample.AggregateRouteLaw
 import FCAppendix.Ample.BoundaryEndpointPath
-import FCAppendix.Exclusive.CompletionExistingSourceFamily
 import FCAppendix.Exclusive.CompletionScarceOnce
+import FCAppendix.Exclusive.NarrowExistenceConstructedFamily
+import FCAppendix.Exclusive.ScarceExistence
 import FCAppendix.Existence.Potential
 import FCAppendix.Finite.EnvelopeDerivative
 import FCAppendix.Finite.PPIExpansion
