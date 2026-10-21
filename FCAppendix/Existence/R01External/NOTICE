@@ -1,0 +1,9 @@
+These files derive from Daniel Lyng’s Econlib, revision
+003655ccf010cdf44c4f67d6675167b54ce0e9df:
+https://github.com/danlyng/Econlib/tree/003655ccf010cdf44c4f67d6675167b54ce0e9df
+
+Copyright (c) 2026 Daniel Lyng. All rights reserved.
+Authors: Daniel Lyng
+Released under the Apache 2.0 license in LICENSE.
+
+Imports and proofs were adapted to this namespace and Lean/Mathlib 4.32.0 where needed; explanatory comments were removed.
