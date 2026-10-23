@@ -7,6 +7,8 @@ import FCAppendix.Affine.Uniform07Finishing.Native.PrimitiveTerminal
 import FCAppendix.Ample.AggregateRouteLaw
 import FCAppendix.Ample.BoundaryEndpointPath
 import FCAppendix.AppendixRepair.GeneralLow.Terminal
+import FCAppendix.CommonReserve.AnonymousTheorem
+import FCAppendix.CommonReserve.NamedTheorem
 import FCAppendix.Exclusive.CompletionScarceOnce
 import FCAppendix.Exclusive.NarrowExistenceConstructedFamily
 import FCAppendix.Exclusive.ScarceExistence
